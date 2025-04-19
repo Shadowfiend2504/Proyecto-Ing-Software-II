@@ -1,0 +1,166 @@
+import Usuario from "../models/usuario.model.js";
+import bcrypt from "bcryptjs";
+import { crearTokenAcceso } from "../libs/jwt.js";
+import jwt from "jsonwebtoken";
+import { TOKEN_SECRETO } from "../config.js";
+
+export const registro = async (req, res) => {
+  const {
+    nombres,
+    apellidos,
+    direccionResidencia,
+    eps,
+    cedula,
+    numeroContacto,
+    esEstudiante,
+  } = req.body;
+
+  try {
+    const cedulaEncontrada = await Usuario.findOne({ cedula });
+    if (cedulaEncontrada)
+      return res.status(400).json(["La cedula ya está en uso"]);
+
+    let usuarioDisponible = false;
+    let iterador = 1;
+    let usuario = "";
+    let letrasObtenidas = 1;
+    const maxIntentos = 100;
+    const maxLetras = nombres.split(" ", 1)[0].length;
+
+    do {
+      if (iterador >= maxIntentos) {
+        iterador = 1;
+        letrasObtenidas += 1;
+      }
+
+      if (letrasObtenidas > maxLetras) break;
+
+      usuario =
+        nombres.slice(0, letrasObtenidas) +
+        apellidos.split(" ", 1)[0] +
+        iterador;
+
+      usuario = usuario
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+
+      const usuarioEncontrado = await Usuario.findOne({ usuario });
+
+      if (!usuarioEncontrado) {
+        usuarioDisponible = true;
+      } else {
+        iterador += 1;
+      }
+    } while (!usuarioDisponible);
+
+    if (!usuarioDisponible)
+      return res.status(400).json(["No se pudo crear el usuario"]);
+
+    const correo = usuario + "@proyecto.uan.com";
+
+    const claveHash = await bcrypt.hash(String(cedula), 10);
+
+    const nuevoUsuario = new Usuario({
+      nombres,
+      apellidos,
+      direccionResidencia,
+      eps,
+      cedula,
+      numeroContacto,
+      esEstudiante,
+      usuario,
+      correo,
+      esAdministrador: false,
+      clave: claveHash,
+    });
+
+    await nuevoUsuario.save();
+    const mensajeUsuario = "Usuario: " + usuario;
+    const mensajeCorreo = "Correo: " + correo;
+    res
+      .status(201)
+      .json(["Usuario registrado con éxito", mensajeUsuario, mensajeCorreo]);
+  } catch (error) {
+    res.status(500).json(["Error interno del servidor: " + error.message]);
+  }
+};
+
+export const iniciarSesion = async (req, res) => {
+  const { usuario, clave } = req.body;
+
+  try {
+    const usuarioEncontrado = await Usuario.findOne({ usuario });
+    
+    if (!usuarioEncontrado)
+      return res.status(400).json(["Usuario o Clave incorrecta"]);
+
+    const claveCoincide = await bcrypt.compare(clave, usuarioEncontrado.clave);
+
+    if (!claveCoincide)
+      return res.status(400).json(["Usuario o Clave incorrecta"]);
+
+    const token = await crearTokenAcceso({ id: usuarioEncontrado._id });
+
+    res.cookie("token", token);
+    res.json({
+      id: usuarioEncontrado._id,
+      nombres: usuarioEncontrado.nombres,
+      apellidos: usuarioEncontrado.apellidos,
+      usuario: usuarioEncontrado.usuario,
+      correo: usuarioEncontrado.correo,
+      esAdministrador: usuarioEncontrado.esAdministrador,
+      createdAt: usuarioEncontrado.createdAt,
+      updatedAt: usuarioEncontrado.updatedAt,
+    });
+  } catch (error) {
+    console.log(error.message)
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const cerrarSesion = (req, res) => {
+  res.cookie("token", "", {
+    expires: new Date(0),
+  });
+  return res.sendStatus(200);
+};
+
+export const profile = async (req, res) => {
+  const usuarioEncontrado = await Usuario.findById(req.user.id);
+
+  if (!usuarioEncontrado)
+    return res.status(400).json({ message: "Usuario no encontrado" });
+
+  return res.json({
+    id: usuarioEncontrado._id,
+    nombres: usuarioEncontrado.nombres,
+    apellidos: usuarioEncontrado.apellidos,
+    correo: usuarioEncontrado.correo,
+    esAdministrador: usuarioEncontrado.esAdministrador,
+    createdAt: usuarioEncontrado.createdAt,
+    updatedAt: usuarioEncontrado.updatedAt,
+  });
+};
+
+export const verificarToken = async (req, res) => {
+  const { token } = req.cookies;
+
+  if (!token) return res.status(401).json(["No autorizado"]);
+
+  jwt.verify(token, TOKEN_SECRETO, async (err, usuario) => {
+    if (err) return res.status(401).json(["No autorizado"]);
+
+    const usuarioEncontrado = await Usuario.findById(usuario.id);
+    if (!usuarioEncontrado) return res.status(401).json(["No autorizado"]);
+
+    return res.json({
+      id: usuarioEncontrado._id,
+      esAdministrador: usuarioEncontrado.esAdministrador,
+      nombres: usuarioEncontrado.nombres,
+      apellidos: usuarioEncontrado.apellidos,
+      usuario: usuarioEncontrado.usuario,
+      correo: usuarioEncontrado.correo,
+    });
+  });
+};

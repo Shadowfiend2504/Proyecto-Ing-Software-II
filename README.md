@@ -1,19 +1,7 @@
-# Proyecto-Ing-Software-II
-Esta es la segunda version de esta materia con un nuevo proyecto
-
-# Recursos de YT 
-
-### Javascript para Aprender React
-https://youtu.be/lVqHiTCIRQg?si=jieoTRNrCH_7lUa4
-
-### Nodejs Curso Desde Cero, para principiantes
-https://www.youtube.com/watch?v=BhvLIzVL8_o
-
-### Curso de Reactjs desde Cero para principiantes 2022
-https://www.youtube.com/watch?v=rLoWMU4L_qE
-
-### MongoDB Curso, Introducción Practica a NoSQL
-https://www.youtube.com/watch?v=lWMemPN9t6Q
-
-### 🤩 Aprende TAILWIND CSS desde CERO - Curso Completo 🚀
-https://www.youtube.com/watch?v=iRYsATOCwKQ
+INSTALACIÓN: 
+Para poder instalar el modulo de login y registro se debe tener instalado en la maquina nodejs, y mongodb
+1. Ejecutar en consola la base de datos con el comando "mongod" (el comando puede variar)
+2. Colocarnos en la carpeta raiz y ejecutar en consola el comando "npm install"
+3. Movernos a la carpeta cliente y ejecutar en consola el comando "npm install"
+4. Colocarnos en la carpeta raiz y ejecutar en consola el comando "npm run dev"
+5. Movernos a la carpeta cliente y ejecutar en consola el comando "npm run dev"
