@@ -5,11 +5,18 @@ import cors from "cors";
 
 import rutasAutenticar from "./routes/autenticar.routes.js";
 
+// Permite usar variables de entorno desde un archivo .env (opcional)
+import dotenv from "dotenv";
+dotenv.config();
+
 const app = express();
+
+// Usa la variable de entorno CORS_ORIGIN o por defecto localhost:5173
+const allowedOrigin = process.env.CORS_ORIGIN || "http://localhost:5173";
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: allowedOrigin,
     credentials: true
   })
 );

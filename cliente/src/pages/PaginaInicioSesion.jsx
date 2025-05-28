@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom"; // importar useNavigate para redireccionar 
 import { usoAutenticacion } from "../context/ContextoAutenticacion";
 
 function PaginaInicioSesion() {
@@ -8,6 +9,8 @@ function PaginaInicioSesion() {
     formState: { errors },
   } = useForm();
   const { iniciarSesion, errores } = usoAutenticacion();
+  const navigate = useNavigate(); // usar useNavigate para redireccionar a otra página
+
   const onSubmit = handleSubmit(async (data) => {
     data.usuario = data.usuario.toLowerCase();
     await iniciarSesion(data);
@@ -69,6 +72,13 @@ function PaginaInicioSesion() {
               className="bg-[#8b8a8a] text-black rounded-md my-4 py-2 px-4 w-35 cursor-pointer"
             >
               Iniciar Sesión
+            </button>
+            <button
+              type="button"
+              className="bg-[#8b8a8a] text-black rounded-md my-4 py-2 px-4 w-35 cursor-pointer"
+              onClick={() => navigate("/restablecer-contrasena")}
+            >
+              Restablecer Contraseña
             </button>
           </div>
         </form>

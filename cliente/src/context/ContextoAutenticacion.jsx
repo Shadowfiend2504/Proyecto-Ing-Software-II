@@ -5,6 +5,9 @@ import {
   peticionRegistro,
   peticionIniciarSesion,
   verificarPeticionToken,
+  //7. Agregamos esta importacion para la funcion de restablecer contraseña
+  // Esta funcion es para verificar si el token es valido y si el usuario existe PARA el restablecimiento de contraseña
+  peticionRestablecerContrasena,
 } from "../api/autenticar";
 import Cookies from "js-cookie";
 
@@ -62,6 +65,31 @@ export const ProveedorAutenticacion = ({ children }) => {
     setUsuario(null);
   };
 
+
+  //crear funcion para hacer peticion para restablecer contraseña al back
+
+  // Esto conecta con el front, recibe datos y los manda al back a controler.js
+  const restablecerContrasena = async (usuario) => {
+    try {
+      const res = await peticionRestablecerContrasena(usuario);
+      toast.dismiss();
+      res.data.forEach((mensaje) => 
+        toast.success(mensaje, {
+          position: "top-right",
+          autoClose: 5000,  // Se cierra automáticamente después de 5s
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "light",
+        })
+      );
+    } catch (error) {
+      setErrores(error.response.data);
+    }
+  };
+
+
   useEffect(() => {
     if (errores.length > 0) {
       const timer = setTimeout(() => {
@@ -107,6 +135,8 @@ export const ProveedorAutenticacion = ({ children }) => {
         registrarse,
         iniciarSesion,
         cerrarSesion,
+        //expotar funcion para restablecer contraseña
+        restablecerContrasena,
         cargando,
         usuario,
         estaAutenticado,

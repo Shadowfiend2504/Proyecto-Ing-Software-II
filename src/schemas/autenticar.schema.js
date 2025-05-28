@@ -46,3 +46,21 @@ export const esquemaInicioSesion = z.object({
     required_error: "La clave es requerida",
   }),
 });
+
+//3. Agregando el esquema para la Restablecer de contraseña
+// Esta se relaciona con Routes
+export const esquemaRestablecerContraseña = z.object({
+  usuario: z.string({
+    required_error: "El usuario es requerido",
+  }),
+  cedula: z
+    .number({
+      required_error: "La cedula es requerida",
+    })
+    .gte(1, {
+      message: "Numero de cedula no valida",
+    })
+    .lte(9999999999, {
+      message: "Numero de cedula no valida",
+    }),
+});

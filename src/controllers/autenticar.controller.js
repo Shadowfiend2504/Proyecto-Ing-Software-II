@@ -4,6 +4,10 @@ import { crearTokenAcceso } from "../libs/jwt.js";
 import jwt from "jsonwebtoken";
 import { TOKEN_SECRETO } from "../config.js";
 
+//esto es para crear el usuario y guardarlo en la base de datos
+// se hace la validacion de la cedula y el usuario, si no existe se crea el usuario
+// se crea el usuario y se guarda en la base de datos
+
 export const registro = async (req, res) => {
   const {
     nombres,
@@ -58,6 +62,9 @@ export const registro = async (req, res) => {
       return res.status(400).json(["No se pudo crear el usuario"]);
 
     const correo = usuario + "@proyecto.uan.com";
+
+    //si valida que todo esta bien que lo encrypte y lo guarde en la base de datos
+    //se encripta la clave con bcryptjs, se le pasa la cedula como clave y se le da un salt de 10
 
     const claveHash = await bcrypt.hash(String(cedula), 10);
 
@@ -164,3 +171,44 @@ export const verificarToken = async (req, res) => {
     });
   });
 };
+
+
+
+// Esta funcion es para verificar si el token es valido y si el usuario existe PARA el restablecimiento de contraseña
+// Aca valida directamente los datos con lo que hay en back 
+// en contraseas validar si los camposson iguals si si mandar a la DB el nuevo valor
+
+
+//5. Agrego la validacion para cambiar la contraseña
+
+
+
+export const restablecerContrasena = async (req, res) => {
+  const {
+    usuario,
+    cedula,
+    nuevaContrasena
+
+  } = req.body;
+
+  try {
+    const usuarioEncontrado = await Usuario.findOne({ usuario, cedula });
+
+    if (!usuarioEncontrado) return res.status(400).json(["Usuario no encontrado o cedula incorrecta"]);
+    
+ 
+    const claveHash = await bcrypt.hash(String(nuevaContrasena), 10);
+    const usuarioActualizado = await Usuario.findByIdAndUpdate(
+      usuarioEncontrado._id,
+      { clave: claveHash },
+      { new: true }
+    );
+    if (!usuarioActualizado) return res.status(400).json(["Error al actualizar la contraseña"]);
+
+    res.status(200).json(["Contraseña actualizada con éxito"]);
+
+
+  }catch (error) {
+    res.status(500).json(["Error interno del servidor: " + error.message]);
+  }
+};  
